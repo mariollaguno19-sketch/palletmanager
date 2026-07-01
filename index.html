@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PalletControl — Biomar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5; --bg2:#e4e8ed; --sur:#fff; --sur2:#f7f9fb;
+  --bdr:#d1d5db; --bdr2:#e5e7eb; --bdr3:rgba(0,0,0,0.05);
+  --t1:#0f1117; --t2:#374151; --t3:#4b5563; --t4:#6b7280; --t5:#9ca3af;
+  --teal:#0a6b60; --teal2:#0d8a7c; --tealL:#e0f2ef; --tealT:#064e46; --tealM:#c0e8e2;
+  --red:#b91c1c; --redL:#fee2e2; --redT:#7f1d1d;
+  --amb:#b45309; --ambL:#fef3c7; --ambT:#78350f;
+  --grn:#15803d; --grnL:#dcfce7; --grnT:#14532d;
+  --blu:#1d4ed8; --bluL:#dbeafe; --bluT:#1e3a8a;
+  --font:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",monospace;
+  --r:10px; --rl:14px; --rxl:20px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.06);
+  --shM:0 4px 20px rgba(0,0,0,.10),0 1px 4px rgba(0,0,0,.06);
+  --shL:0 16px 48px rgba(0,0,0,.16),0 2px 8px rgba(0,0,0,.08);
+  --sb:env(safe-area-inset-bottom,0px);
+}
+html{font-family:var(--font);background:var(--bg);color:var(--t1);font-size:14px;-webkit-font-smoothing:antialiased}
+body{min-height:100dvh;display:flex;flex-direction:column}
+
+/* ═══════════════════════════════════════════
+   PANTALLA DE SELECCIÓN DE ROL
+═══════════════════════════════════════════ */
+#role-screen{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#0f1117 0%,#1a2535 50%,#0a6b60 100%);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px; overflow-y:auto;
+}
+.rs-wrap{width:100%;max-width:440px; margin:auto 0; padding:20px 0}
+.rs-logo{
+  display:flex;align-items:center;gap:12px;margin-bottom:40px;justify-content:center;
+}
+.rs-logomark{
+  width:44px;height:44px;border-radius:12px;background:var(--teal);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 4px rgba(10,107,96,0.3);
+}
+.rs-logomark svg{width:22px;height:22px;fill:#fff}
+.rs-logoname{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.rs-title{font-size:16px;font-weight:600;color:rgba(255,255,255,.6);text-align:center;margin-bottom:28px}
+.rs-cards{display:flex;flex-direction:column;gap:12px}
+.rs-card{
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);
+  border-radius:var(--rxl);padding:20px 22px;cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;gap:16px;
+  -webkit-tap-highlight-color:transparent;
+}
+.rs-card:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.25);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.rs-card:active{transform:scale(.98)}
+.rs-card-icon{
+  width:48px;height:48px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+}
+.rs-card-icon.admin{background:linear-gradient(135deg,#0a6b60,#0d8a7c)}
+.rs-card-icon.desp{background:linear-gradient(135deg,#1d4ed8,#2563eb)}
+.rs-card-body{flex:1}
+.rs-card-title{font-size:16px;font-weight:800;color:#fff;margin-bottom:3px}
+.rs-card-sub{font-size:12px;color:rgba(255,255,255,.5);font-weight:500;line-height:1.4}
+.rs-card-arrow{color:rgba(255,255,255,.3);font-size:18px;flex-shrink:0}
+.rs-card.selected-admin{border-color:var(--teal);background:rgba(10,107,96,.15)}
+.rs-card.selected-desp{border-color:var(--blu);background:rgba(29,78,216,.15)}
+
+/* Sub-selector camaronera */
+.rs-cam-select{
+  margin-top:12px;display:none;
+  background:rgba(0,0,0,.25);border-radius:var(--rl);padding:16px;
+  border:1.5px solid rgba(255,255,255,.1);
+}
+.rs-cam-select.show{display:block}
+.rs-cam-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.rs-cams{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rs-cam-btn{
+  padding:10px 12px;border-radius:var(--r);border:1.5px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);
+  font-size:13px;font-weight:700;font-family:var(--font);
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;
+  -webkit-tap-highlight-color:transparent;
+}
+.rs-cam-btn:hover{background:rgba(255,255,255,.12)}
+.rs-cam-btn.on{border-color:transparent;color:#fff}
+.rs-cam-btn.on.cam-s{background:linear-gradient(135deg,#1d4ed8,#2563eb)}
+.rs-cam-btn.on.cam-c{background:linear-gradient(135deg,#065f46,#10b981)}
+.rs-cam-btn.on.cam-g{background:linear-gradient(135deg,#92400e,#d97706)}
+.rs-cam-btn.on.cam-ch{background:linear-gradient(135deg,#991b1b,#ef4444)}
+.rs-cam-dot{width:8px;height:8px;border-radius:50%}
+
+/* Login Admin */
+.rs-login{
+  margin-top:12px;display:none;
+  background:rgba(0,0,0,.25);border-radius:var(--rl);padding:16px;
+  border:1.5px solid rgba(255,255,255,.1);
+}
+.rs-login.show{display:block}
+.rs-login-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.rs-login-field{margin-bottom:10px}
+.rs-login-field:last-child{margin-bottom:0}
+.rs-login-input{
+  width:100%;padding:11px 13px;border-radius:var(--r);
+  border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);
+  color:#fff;font-family:var(--font);font-size:14px;outline:none;
+  transition:border-color .15s;
+}
+.rs-login-input::placeholder{color:rgba(255,255,255,.35)}
+.rs-login-input:focus{border-color:var(--teal);background:rgba(255,255,255,.1)}
+.rs-login-error{
+  display:none;font-size:12px;color:#fca5a5;font-weight:600;
+  margin-top:8px;padding:8px 12px;background:rgba(220,38,38,.15);
+  border-radius:8px;border:1px solid rgba(220,38,38,.3);
+}
+.rs-login-error.show{display:block}
+
+.rs-enter{
+  width:100%;margin-top:16px;padding:14px;border:none;border-radius:var(--rl);
+  background:var(--teal);color:#fff;font-size:15px;font-weight:800;
+  font-family:var(--font);cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  -webkit-tap-highlight-color:transparent;
+}
+.rs-enter:hover{background:var(--teal2);transform:translateY(-1px)}
+.rs-enter:active{transform:scale(.98)}
+.rs-enter:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════ */
+#app{display:none;flex-direction:column;flex:1}
+#app.show{display:flex}
+
+.nav{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;height:54px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(16px);
+  border-bottom:2px solid var(--bdr2);padding:0 16px;gap:10px;
+}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;color:var(--t1);text-decoration:none;flex-shrink:0}
+.bmark{width:28px;height:28px;border-radius:7px;background:var(--teal);display:flex;align-items:center;justify-content:center}
+.bmark svg{width:15px;height:15px;fill:#fff}
+.ndiv{width:1px;height:22px;background:var(--bdr2);flex-shrink:0}
+.ntabs{display:flex;gap:2px}
+.ntab{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 12px;border-radius:7px;border:none;
+  background:transparent;color:var(--t3);font-size:13px;font-weight:600;
+  font-family:var(--font);cursor:pointer;transition:all .12s;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+}
+.ntab:hover{background:var(--bg);color:var(--t2)}
+.ntab.on{background:var(--t1);color:#fff}
+.ntab .nbadge{font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;font-family:var(--mono);background:var(--amb);color:#fff}
+.ntab .nbadge[data-n="0"]{display:none}
+
+.nright{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
+.who-chip{
+  display:flex;align-items:center;gap:7px;
+  padding:5px 12px 5px 8px;border-radius:20px;
+  border:2px solid var(--bdr);background:var(--sur);
+  font-size:12px;font-weight:700;color:var(--t2);
+  cursor:pointer;transition:all .12s;user-select:none;
+}
+.who-chip:hover{border-color:var(--bdr);opacity:.8}
+.conn-chip{
+  display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;
+  border:2px solid var(--bdr2);background:var(--sur2);
+  font-size:11px;font-weight:700;color:var(--t3);
+}
+.conn-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.conn-connecting{background:var(--amb);animation:connPulse 1s ease-in-out infinite}
+.conn-live{background:var(--grn)}
+.conn-offline{background:var(--red)}
+@keyframes connPulse{0%,100%{opacity:1}50%{opacity:.3}}
+.wdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.wd-a{background:var(--teal)} .wd-d{background:var(--blu)}
+
+.bbar{
+  position:fixed;bottom:0;left:0;right:0;z-index:110;
+  background:#fff;border-top:2px solid var(--bdr2);
+  padding:4px 0 calc(4px + var(--sb));display:none;
+}
+.btabs{display:flex}
+.btab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 4px;border:none;background:transparent;
+  font-size:10px;font-weight:700;color:var(--t4);font-family:var(--font);
+  cursor:pointer;transition:color .12s;position:relative;
+  -webkit-tap-highlight-color:transparent;
+}
+.btab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.btab.on{color:var(--teal)}
+.bbadge{
+  position:absolute;top:3px;right:calc(50% - 20px);
+  min-width:16px;height:16px;border-radius:8px;padding:0 3px;
+  background:var(--amb);color:#fff;font-size:9px;font-weight:700;
+  font-family:var(--mono);display:flex;align-items:center;justify-content:center;
+  border:2px solid #fff;
+}
+
+.page{display:none}
+.page.on{display:block}
+.wrap{max-width:1540px;margin:0 auto;padding:18px 16px}
+
+.ph{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.ph-t{font-size:18px;font-weight:800;letter-spacing:-.025em;color:var(--t1)}
+.ph-s{font-size:12px;color:var(--t3);margin-top:3px;font-weight:500}
+.ph-a{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:9px 16px;border-radius:var(--r);border:none;
+  font-size:13px;font-weight:700;font-family:var(--font);
+  cursor:pointer;transition:all .12s;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;line-height:1;
+}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+.bteal{background:var(--teal);color:#fff}.bteal:hover{background:var(--teal2)}
+.bghost{background:var(--sur);color:var(--t2);border:2px solid var(--bdr)}.bghost:hover{background:var(--bg)}
+.bdanger{background:var(--redL);color:var(--red);border:2px solid rgba(185,28,28,.2)}
+.bsuccess{background:var(--grnL);color:var(--grn);border:2px solid rgba(21,128,61,.2)}.bsuccess:hover{background:#bbf7d0}
+.bprimary{background:var(--t1);color:#fff}.bprimary:hover{background:#2d3748}
+.bsm{padding:6px 10px;font-size:11px;border-radius:7px}
+.bfull{width:100%;justify-content:center;padding:12px;font-size:14px}
+
+.upload-zone{
+  border:2px dashed var(--bdr);border-radius:var(--rl);
+  background:var(--sur);padding:28px 20px;text-align:center;
+  cursor:pointer;margin-bottom:18px;transition:all .15s;
+}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--teal);background:var(--tealL)}
+.uz-icon{font-size:32px;margin-bottom:10px}
+.uz-title{font-size:15px;font-weight:700;color:var(--t1);margin-bottom:4px}
+.uz-sub{font-size:12px;color:var(--t3);font-weight:500;margin-bottom:12px}
+.uz-fmt{font-size:10px;color:var(--t5);font-family:var(--mono)}
+.upload-status{
+  display:none;background:var(--sur);border:2px solid var(--bdr2);
+  border-radius:var(--rl);padding:14px 16px;margin-bottom:18px;
+}
+.us-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.us-title{font-size:13px;font-weight:700;color:var(--t1)}
+.us-date{font-size:11px;color:var(--t4);font-family:var(--mono)}
+.us-note{font-size:11px;color:var(--teal);font-weight:600}
+
+.sector-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.stab{
+  display:flex;align-items:center;gap:7px;
+  padding:8px 16px;border-radius:var(--r);border:2px solid var(--bdr);
+  background:var(--sur);font-size:13px;font-weight:700;color:var(--t2);
+  font-family:var(--font);cursor:pointer;transition:all .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.stab:hover{border-color:var(--t3)}
+.stab.on{color:#fff;border-color:transparent}
+.stab.on.st-s{background:linear-gradient(135deg,#1e3a8a,#1d4ed8)}
+.stab.on.st-c{background:linear-gradient(135deg,#064e46,#065f46)}
+.stab.on.st-g{background:linear-gradient(135deg,#78350f,#92400e)}
+.stab.on.st-ch{background:linear-gradient(135deg,#7f1d1d,#991b1b)}
+.stab-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.sdc-s{background:#1d4ed8} .sdc-c{background:#065f46} .sdc-g{background:#92400e} .sdc-ch{background:#991b1b}
+
+.cam-banner{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 18px;border-radius:var(--rl);margin-bottom:18px;
+  background:linear-gradient(135deg,var(--blu) 0%,#1e40af 100%);
+  color:#fff;box-shadow:0 4px 14px rgba(29,78,216,.35);
+}
+.cam-banner.cam-s{background:linear-gradient(135deg,#1d4ed8,#1e40af);box-shadow:0 4px 14px rgba(29,78,216,.35)}
+.cam-banner.cam-c{background:linear-gradient(135deg,#065f46,#047857);box-shadow:0 4px 14px rgba(6,95,70,.35)}
+.cam-banner.cam-g{background:linear-gradient(135deg,#92400e,#b45309);box-shadow:0 4px 14px rgba(146,64,14,.35)}
+.cam-banner.cam-ch{background:linear-gradient(135deg,#991b1b,#b91c1c);box-shadow:0 4px 14px rgba(153,27,27,.35)}
+.cb-icon{font-size:24px}
+.cb-body{flex:1}
+.cb-title{font-size:16px;font-weight:800;letter-spacing:-.01em}
+.cb-sub{font-size:11px;opacity:.75;margin-top:2px;font-weight:500}
+.cb-total{text-align:right}
+.cb-total-v{font-size:28px;font-weight:900;font-family:var(--mono);line-height:1}
+.cb-total-l{font-size:9px;opacity:.65;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+
+.inv-section{margin-bottom:20px}
+.inv-st{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--t1);margin-bottom:8px;padding:0 2px}
+.inv-sbar{width:4px;height:18px;border-radius:2px;flex-shrink:0}
+.sbar-s{background:#1d4ed8} .sbar-c{background:#065f46} .sbar-g{background:#92400e} .sbar-ch{background:#991b1b}
+.inv-wrap{background:var(--sur);border:2px solid var(--bdr2);border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh)}
+.itbl{width:100%;border-collapse:collapse}
+.itbl th{
+  padding:9px 14px;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--t3);border-bottom:2px solid var(--bdr2);
+  background:var(--sur2);white-space:nowrap;
+}
+.itbl th:first-child{text-align:left;min-width:150px}
+.itbl th:not(:first-child){text-align:right}
+.itbl td{padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--bdr3)}
+.itbl td:first-child{font-size:12px;font-weight:700;color:var(--t2);border-right:2px solid var(--bdr2);background:var(--sur2)}
+.itbl td:not(:first-child){text-align:right;font-family:var(--mono)}
+.itbl tr:last-child td{border-bottom:none}
+.row-bim td:first-child{color:var(--tealT)}
+.row-cam td:first-child{color:var(--bluT)}
+.row-tra td{background:var(--ambL)}
+.row-tra td:first-child{color:var(--ambT);background:#fde68a}
+.row-dif td{background:var(--sur2);border-top:2px solid var(--bdr)}
+.row-dif td:first-child{color:var(--t2);font-weight:800}
+.n-pos{color:var(--tealT)} .n-neg{color:var(--redT);font-weight:800} .n-zero{color:var(--t5)}
+.n-tra{color:var(--ambT)} .n-dp{color:var(--grnT)} .n-dn{color:var(--redT);font-weight:800}
+
+.sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.scard{
+  background:var(--sur);border:2px solid var(--bdr2);
+  border-radius:var(--rl);padding:14px 16px;box-shadow:var(--sh);
+}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sc-name{font-size:12px;font-weight:800;color:var(--t1);display:flex;align-items:center;gap:7px}
+.scdot{width:9px;height:9px;border-radius:50%}
+.spill{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;border:1.5px solid}
+.sp-ok{background:var(--grnL);color:var(--grnT);border-color:rgba(21,128,61,.2)}
+.sp-warn{background:var(--ambL);color:var(--ambT);border-color:rgba(180,83,9,.2)}
+.sc-nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+.snum{text-align:center;padding:6px 4px;background:var(--sur2);border-radius:7px;border:2px solid var(--bdr2)}
+.sn-l{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);display:block}
+.sn-v{font-size:16px;font-weight:800;font-family:var(--mono);line-height:1.2}
+
+.card{background:var(--sur);border:2px solid var(--bdr2);border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh)}
+.card-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:2px solid var(--bdr2);background:var(--sur2)}
+.card-t{font-size:14px;font-weight:700;color:var(--t1)}
+.card-c{font-size:11px;color:var(--t3);font-family:var(--mono);font-weight:600}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.dt{width:100%;border-collapse:collapse;min-width:520px}
+table.dt thead{background:var(--sur2)}
+table.dt th{padding:8px 13px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);border-bottom:2px solid var(--bdr2);white-space:nowrap}
+table.dt th.r,table.dt td.r{text-align:right}
+table.dt td{padding:9px 13px;font-size:12px;font-weight:500;color:var(--t2);border-bottom:1px solid var(--bdr3)}
+table.dt tbody tr:last-child td{border-bottom:none}
+table.dt tbody tr:hover td{background:var(--bg)}
+.tmono{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--t1)}
+.tsm{font-size:11px;color:var(--t2)}
+.txs{font-size:10px;color:var(--t3);font-family:var(--mono)}
+.rtr td{background:#fffbeb!important}
+.rtr:hover td{background:#fef3c7!important}
+
+.tag{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;border:1.5px solid}
+.ts{background:var(--bluL);color:var(--bluT);border-color:rgba(29,78,216,.2)}
+.tc{background:var(--grnL);color:var(--grnT);border-color:rgba(21,128,61,.2)}
+.tg{background:var(--ambL);color:var(--ambT);border-color:rgba(180,83,9,.2)}
+.tch{background:var(--redL);color:var(--redT);border-color:rgba(185,28,28,.2)}
+.ttr{background:var(--ambL);color:var(--ambT);border-color:rgba(180,83,9,.2)}
+.trec{background:var(--grnL);color:var(--grnT);border-color:rgba(21,128,61,.2)}
+.tprod{background:var(--bluL);color:var(--bluT);border-color:rgba(29,78,216,.2)}
+.tlimb{background:#ede9fe;color:#4c1d95;border-color:rgba(124,58,237,.2)}
+
+.alert{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border-radius:var(--rl);margin-bottom:14px;border:2px solid;border-left:4px solid}
+.a-icon{font-size:15px;flex-shrink:0;margin-top:1px}
+.a-t{font-size:13px;font-weight:700}
+.a-b{font-size:12px;margin-top:3px;font-weight:500;line-height:1.5}
+.a-teal{background:var(--tealL);border-color:rgba(10,107,96,.2);border-left-color:var(--teal)}
+.a-teal .a-t,.a-teal .a-b{color:var(--tealT)}
+.a-amb{background:var(--ambL);border-color:rgba(180,83,9,.2);border-left-color:var(--amb)}
+.a-amb .a-t,.a-amb .a-b{color:var(--ambT)}
+.tbanner{
+  display:flex;align-items:center;gap:10px;
+  background:var(--ambL);border:2px solid rgba(180,83,9,.2);border-left:4px solid var(--amb);
+  border-radius:var(--rl);padding:10px 14px;margin-bottom:14px;
+  font-size:12px;font-weight:600;color:var(--ambT);
+}
+.tbc{background:var(--amb);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;font-family:var(--mono);margin-left:auto}
+
+.filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.fi{
+  padding:8px 12px;border-radius:var(--r);border:2px solid var(--bdr);
+  background:var(--sur);font-family:var(--font);font-size:12px;
+  font-weight:600;color:var(--t2);outline:none;cursor:pointer;
+  -webkit-appearance:none;transition:border-color .12s;
+}
+.fi::placeholder{color:var(--t5);font-weight:500}
+.fi:focus{border-color:var(--teal)}
+.fi-s{flex:1;min-width:160px}
+
+.mlist{display:none;flex-direction:column;gap:10px;padding:12px}
+.mcard{background:var(--sur);border:2px solid var(--bdr2);border-radius:var(--rl);padding:14px;box-shadow:var(--sh)}
+.mcard.mtr{background:var(--ambL);border-color:rgba(180,83,9,.3)}
+.mtop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.mtit{font-size:14px;font-weight:800;color:var(--t1);font-family:var(--mono)}
+.msub{font-size:11px;color:var(--t3);font-weight:600;margin-top:2px}
+.mqbig{font-size:28px;font-weight:800;font-family:var(--mono);color:var(--t1);line-height:1}
+.mql{font-size:9px;color:var(--t3);font-weight:700;text-align:right;text-transform:uppercase;letter-spacing:.05em}
+.mfields{display:flex;flex-direction:column}
+.mfield{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdr3)}
+.mfield:last-child{border-bottom:none}
+.mfl{font-size:11px;color:var(--t3);font-weight:600}
+.mfv{font-size:12px;color:var(--t2);font-weight:600;text-align:right}
+.mfv.mono{font-family:var(--mono);color:var(--t1)}
+.mqtys{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:8px 0}
+.mqchip{background:var(--sur2);border:1.5px solid var(--bdr2);border-radius:var(--r);padding:7px 8px;text-align:center}
+.mqcl{font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:2px}
+.mqcv{font-size:16px;font-weight:800;font-family:var(--mono);color:var(--t1)}
+.macts{display:flex;gap:8px;padding-top:10px;border-top:2px solid var(--bdr2);margin-top:10px}
+
+.overlay{position:fixed;inset:0;background:rgba(10,14,20,.55);backdrop-filter:blur(6px);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.overlay.on{display:flex}
+.modal{
+  background:var(--sur);width:100%;max-width:580px;max-height:94dvh;
+  overflow-y:auto;box-shadow:var(--shL);
+  border-radius:var(--rxl) var(--rxl) 0 0;
+  animation:sup .22s cubic-bezier(.22,1,.36,1);
+  padding-bottom:var(--sb);
+}
+@keyframes sup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mdrag{width:40px;height:4px;background:var(--bdr);border-radius:2px;margin:11px auto 0}
+.mhd{display:flex;align-items:center;justify-content:space-between;padding:10px 20px 0}
+.mt{font-size:17px;font-weight:800;color:var(--t1);letter-spacing:-.02em}
+.mx{width:28px;height:28px;border-radius:7px;border:none;background:var(--bg);color:var(--t3);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mx:hover{background:var(--bg2);color:var(--t1)}
+.mbody{padding:14px 20px 20px}
+.mfoot{display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:2px solid var(--bdr2);margin-top:14px}
+.mfoot .bteal{order:-1}
+.mnote{font-size:11px;color:var(--t3);background:var(--sur2);border:1.5px solid var(--bdr2);border-radius:var(--r);padding:10px 13px;margin-bottom:14px;font-weight:500;line-height:1.5}
+.mnote strong{color:var(--t2)}
+.fg{margin-bottom:12px}.fgl{margin-bottom:0}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.fg2 .fg{margin-bottom:0}
+.fl{display:block;font-size:11px;font-weight:700;color:var(--t3);margin-bottom:5px}
+.fin,.fse{width:100%;padding:11px 13px;border-radius:var(--r);border:2px solid var(--bdr);background:var(--sur2);font-family:var(--font);font-size:14px;color:var(--t1);outline:none;-webkit-appearance:none;transition:border-color .12s}
+.fin::placeholder{color:var(--t5);font-size:13px}
+.fin:focus,.fse:focus{border-color:var(--teal);background:#fff}
+.fsep{font-size:11px;font-weight:700;color:var(--t3);border-top:2px solid var(--bdr2);padding-top:12px;margin:4px 0 12px}
+.qgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.qfull{grid-column:span 2}
+
+.vblock{background:var(--sur2);border:2px solid var(--bdr2);border-radius:var(--rl);padding:14px;margin-bottom:14px}
+.vhd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.vtot{font-size:20px;font-weight:800;font-family:var(--mono);color:var(--t1)}
+.vgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.vitem{background:var(--sur);border:1.5px solid var(--bdr2);border-radius:var(--r);padding:8px 10px;text-align:center}
+.viL{font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:2px}
+.viV{font-size:20px;font-weight:800;font-family:var(--mono);color:var(--t1)}
+.vmeta{font-size:11px;color:var(--t3);font-weight:600;padding-top:10px;border-top:1.5px solid var(--bdr2)}
+.vmeta strong{color:var(--t2)}
+
+.empty{text-align:center;padding:40px 20px}
+.empty-ic{width:48px;height:48px;border-radius:var(--rl);background:var(--bg2);margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+.empty-ic svg{width:22px;height:22px;stroke:var(--t5);fill:none;stroke-width:1.5}
+.empty-t{font-size:14px;font-weight:700;color:var(--t2);margin-bottom:4px}
+.empty-s{font-size:12px;color:var(--t3)}
+
+.toast{position:fixed;bottom:calc(72px + var(--sb));left:50%;transform:translateX(-50%);z-index:400;background:var(--t1);color:#fff;border-radius:var(--rl);padding:11px 18px;font-size:13px;font-weight:600;box-shadow:var(--shL);display:none;white-space:nowrap;max-width:calc(100vw - 32px);text-align:center}
+.toast.on{display:block;animation:tin .2s cubic-bezier(.22,1,.36,1)}
+@keyframes tin{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── PALETA DE COLORES DE PRODUCTO ─────── */
+.pchip{display:inline-flex;align-items:center;gap:5px}
+.pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pdot-madera{background:#a16207}
+.pdot-azul1{background:#2563eb}
+.pdot-azul2{background:#1d4ed8}
+.pdot-verde{background:#16a34a}
+
+@media(max-width:1200px){.sum-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){
+  .ntabs{display:none}
+  .brand>span{display:none}
+  body{padding-bottom:calc(66px + var(--sb))}
+  .bbar{display:block}
+  .toast{bottom:calc(74px + var(--sb))}
+  .wrap{padding:12px}
+  .ph{margin-bottom:12px}
+  .ph-t{font-size:16px}
+  .sum-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .tscroll{display:none}
+  .mlist{display:flex}
+  .filters{flex-direction:column}
+  .fi{width:100%}
+  .fg2{grid-template-columns:1fr}
+  .itbl th,.itbl td{padding:7px 10px;font-size:11px}
+  .itbl th:first-child{min-width:110px}
+}
+@media(max-width:480px){
+  .sum-grid{grid-template-columns:1fr}
+  .rs-cams{grid-template-columns:1fr 1fr}
+}
+@media(prefers-reduced-motion:reduce){*,.modal{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     PANTALLA DE SELECCIÓN DE ROL
+════════════════════════════════════════ -->
+<div id="role-screen">
+  <div class="rs-wrap">
+    <div class="rs-logo">
+      <div class="rs-logomark">
+        <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      </div>
+      <div class="rs-logoname">PalletControl</div>
+    </div>
+    <div class="rs-title">¿Cómo vas a ingresar hoy?</div>
+    <div class="rs-cards">
+
+      <div class="rs-card" id="card-admin" onclick="selectRole('admin')">
+        <div class="rs-card-icon admin">🏭</div>
+        <div class="rs-card-body">
+          <div class="rs-card-title">Administrador</div>
+          <div class="rs-card-sub">Supervisión total · Carga Excel · Valida retornos · Ve todos los sectores</div>
+        </div>
+        <div class="rs-card-arrow">›</div>
+      </div>
+
+      <!-- Login admin -->
+      <div class="rs-login" id="admin-login">
+        <div class="rs-login-label">Iniciar sesión</div>
+        <div class="rs-login-field">
+          <input type="text" class="rs-login-input" id="login-user" placeholder="Usuario" autocomplete="username">
+        </div>
+        <div class="rs-login-field">
+          <input type="password" class="rs-login-input" id="login-pass" placeholder="Contraseña" autocomplete="current-password">
+        </div>
+        <div class="rs-login-error" id="login-error">Usuario o contraseña incorrectos</div>
+      </div>
+
+      <div class="rs-card" id="card-desp" onclick="selectRole('despachador')">
+        <div class="rs-card-icon desp">🚛</div>
+        <div class="rs-card-body">
+          <div class="rs-card-title">Despachador</div>
+          <div class="rs-card-sub">Registra retornos · Ve el inventario de su camaronera</div>
+        </div>
+        <div class="rs-card-arrow">›</div>
+      </div>
+
+      <div class="rs-cam-select" id="cam-select">
+        <div class="rs-cam-label">Selecciona tu camaronera</div>
+        <div class="rs-cams">
+          <button class="rs-cam-btn cam-s" onclick="selectCam('SANTAY',this)">
+            <div class="rs-cam-dot" style="background:#1d4ed8"></div>Santay
+          </button>
+          <button class="rs-cam-btn cam-c" onclick="selectCam('CANTAGALLO',this)">
+            <div class="rs-cam-dot" style="background:#065f46"></div>Cantagallo
+          </button>
+          <button class="rs-cam-btn cam-g" onclick="selectCam('GARZAL',this)">
+            <div class="rs-cam-dot" style="background:#92400e"></div>Garzal
+          </button>
+          <button class="rs-cam-btn cam-ch" onclick="selectCam('CHURUTE',this)">
+            <div class="rs-cam-dot" style="background:#991b1b"></div>Churute
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <button class="rs-enter" id="rs-enter" onclick="enterApp()" disabled>
+      Ingresar →
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     APP SHELL
+════════════════════════════════════════ -->
+<div id="app">
+
+  <nav class="nav">
+    <a class="brand" href="#">
+      <div class="bmark"><svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
+      <span>PalletControl</span>
+    </a>
+    <div class="ndiv"></div>
+    <div class="ntabs" id="ntabs"></div>
+    <div class="nright">
+      <div class="conn-chip" title="Estado de sincronización en tiempo real">
+        <div class="conn-dot conn-connecting" id="conn-dot"></div>
+        <span id="conn-lbl">Conectando…</span>
+      </div>
+      <div class="who-chip" onclick="backToRoleScreen()">
+        <div class="wdot wd-a" id="wdot"></div>
+        <span id="wlbl">Admin</span>
+        <span style="font-size:10px;opacity:.5;margin-left:2px">✕</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="bbar" id="bbar">
+    <div class="btabs" id="btabs"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div id="pages"></div>
+
+</div><!-- /app -->
+
+<!-- MODAL: RETORNO -->
+<div class="overlay" id="mo-r">
+  <div class="modal">
+    <div class="mdrag"></div>
+    <div class="mhd"><div class="mt">Registrar Retorno</div><button class="mx" onclick="closeMo('mo-r')">✕</button></div>
+    <div class="mbody">
+      <div class="mnote">Los pallets quedan en <strong>En Tránsito</strong> hasta que el Admin confirme su llegada a bodega.</div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Fecha de salida</label><input type="date" class="fin" id="r-fec"></div>
+        <div class="fg"><label class="fl">Camaronera</label><select class="fse" id="r-cam"><option>SANTAY</option><option>CANTAGALLO</option><option>GARZAL</option><option>CHURUTE</option></select></div>
+      </div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Número de Guía</label><input class="fin" id="r-gui" placeholder="Ej: 21"></div>
+        <div class="fg"><label class="fl">Chofer</label><input class="fin" id="r-cho" placeholder="Nombre"></div>
+      </div>
+      <div class="fg"><label class="fl">Placa del vehículo</label><input class="fin" id="r-pla" placeholder="ABC-1234"></div>
+      <div class="fsep">Cantidades por tipo de pallet</div>
+      <div class="qgrid">
+        <div class="fg"><label class="fl"><span class="pchip"><span class="pdot pdot-madera"></span>Madera 1,2×1</span></label><input type="number" class="fin" id="r-ma" value="0" min="0" inputmode="numeric"></div>
+        <div class="fg"><label class="fl"><span class="pchip"><span class="pdot pdot-azul1"></span>Azul 1,2×1</span></label><input type="number" class="fin" id="r-maz" value="0" min="0" inputmode="numeric"></div>
+        <div class="fg qfull fgl"><label class="fl"><span class="pchip"><span class="pdot pdot-verde"></span>Verde 1,2×1,2</span></label><input type="number" class="fin" id="r-mvg" value="0" min="0" inputmode="numeric"></div>
+      </div>
+      <div class="mfoot">
+        <button class="btn bteal bfull" id="btn-guardar-r" onclick="guardarR()">Enviar Retorno</button>
+        <button class="btn bghost bfull" onclick="closeMo('mo-r')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VALIDAR -->
+<div class="overlay" id="mo-v">
+  <div class="modal">
+    <div class="mdrag"></div>
+    <div class="mhd"><div class="mt">Validar Llegada a Bodega</div><button class="mx" onclick="closeMo('mo-v')">✕</button></div>
+    <div class="mbody">
+      <div class="mnote" style="background:var(--ambL);border-color:rgba(180,83,9,.2);color:var(--ambT)">Al confirmar, pasan a <strong>Recibido</strong> y el stock Biomar se actualiza.</div>
+      <div id="v-det"></div>
+      <div class="fg"><label class="fl">Guía de Recepción Biomar</label><input class="fin" id="v-gui" placeholder="Número interno (opcional)"></div>
+      <div class="fg fgl"><label class="fl">Observaciones</label><input class="fin" id="v-obs" placeholder="Opcional"></div>
+      <div class="mfoot">
+        <button class="btn bsuccess bfull" onclick="confirmarR()">✓ Confirmar Recepción</button>
+        <button class="btn bghost bfull" onclick="closeMo('mo-v')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+/* ══════════════════════════════════════
+   CONSTANTES
+══════════════════════════════════════ */
+// Solo 4 tipos de pallet reales (según catálogo de Biomar)
+const PKEYS  = ['madera','azul1','azul2','verde'];
+const PLABEL = {
+  madera:'Madera 1,2×1',
+  azul1:'Metal Azul 1,2×1',
+  azul2:'Metal Azul 1,2×1,2',
+  verde:'Metal Verde 1,2×1,2',
+};
+const PSHORT = { madera:'Madera', azul1:'Azul 1×1', azul2:'Azul 1,2', verde:'Verde' };
+const PDOT   = { madera:'pdot-madera', azul1:'pdot-azul1', azul2:'pdot-azul2', verde:'pdot-verde' };
+
+const SECTS = ['SANTAY','CANTAGALLO','GARZAL','CHURUTE'];
+const STAG   = {SANTAY:'ts',CANTAGALLO:'tc',GARZAL:'tg',CHURUTE:'tch'};
+const SBAR   = {SANTAY:'sbar-s',CANTAGALLO:'sbar-c',GARZAL:'sbar-g',CHURUTE:'sbar-ch'};
+const SDOT   = {SANTAY:'sdc-s',CANTAGALLO:'sdc-c',GARZAL:'sdc-g',CHURUTE:'sdc-ch'};
+const SCAM_CLS={SANTAY:'cam-s',CANTAGALLO:'cam-c',GARZAL:'cam-g',CHURUTE:'cam-ch'};
+
+// Credenciales admin (demo — en producción esto se valida contra un backend)
+const ADMIN_CREDENTIALS = { user: 'admin', pass: 'biomar2026' };
+
+/* ══════════════════════════════════════
+   SUPABASE — conexión en tiempo real
+   El inventario, despachos y retornos viven
+   en la base de datos, no en memoria local.
+   Cualquier cambio que haga un Despachador
+   (registrar retorno) o el Admin (validar,
+   despachar, cargar Excel) se propaga a TODAS
+   las pestañas/dispositivos abiertos vía Realtime.
+══════════════════════════════════════ */
+const SUPABASE_URL = 'https://azmzrtzgiznscetvnqyr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6bXpydHpnaXpuc2NldHZucXlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MjMwNDEsImV4cCI6MjA5ODQ5OTA0MX0.SpG8F6Mbj5ZZC94H5PVIQDuCqT4Pce_uq26aElufHmk';
+
+// Si el CDN del SDK de Supabase no cargó (bloqueo de red, firewall, sin
+// internet), `supabase` no existe como global. Sin esta guarda, la app entera
+// revienta en silencio antes de mostrar cualquier página, y el error que ve
+// el usuario es un "[object Object]" genérico del navegador.
+let sb = null;
+let sdkLoadError = null;
+try{
+  if(typeof supabase === 'undefined' || !supabase.createClient){
+    throw new Error('El SDK de Supabase no cargó. Revisa tu conexión a internet.');
+  }
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}catch(e){
+  sdkLoadError = e.message || 'No se pudo inicializar la conexión a la base de datos';
+  console.error('Error inicializando Supabase:', e);
+}
+
+// Convierte cualquier forma de error (Error, PostgrestError de Supabase,
+// string, objeto plano, o algo sin forma) en un texto legible.
+// Nunca dejar que un objeto llegue crudo a un toast — de ahí salía el
+// "Error: [object Object]" que no dice nada útil.
+function errMsg(err){
+  if(!err) return 'Error desconocido';
+  if(typeof err === 'string') return err;
+  if(err.message) return err.message;
+  if(err.error_description) return err.error_description;
+  if(err.hint) return err.hint;
+  try{ return JSON.stringify(err); }catch(_){ return 'Error desconocido (ver consola)'; }
+}
+
+let liveChannel = null;
+let connState = 'connecting'; // 'connecting' | 'live' | 'offline'
+
+function setConnState(s){
+  connState = s;
+  const dot = document.getElementById('conn-dot');
+  const lbl = document.getElementById('conn-lbl');
+  if(!dot) return;
+  dot.className = 'conn-dot conn-'+s;
+  lbl.textContent = s==='live' ? 'En vivo' : s==='connecting' ? 'Conectando…' : 'Sin conexión';
+}
+
+function subscribeRealtime(){
+  if(liveChannel || !sb) return;
+  liveChannel = sb.channel('palletcontrol-live')
+    .on('postgres_changes', {event:'*', schema:'public', table:'inventario'}, handleRemoteChange)
+    .on('postgres_changes', {event:'*', schema:'public', table:'retornos'},   handleRemoteChange)
+    .on('postgres_changes', {event:'*', schema:'public', table:'despachos'},  handleRemoteChange)
+    .subscribe(status=>{
+      if(status==='SUBSCRIBED') setConnState('live');
+      else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED') setConnState('offline');
+    });
+}
+
+let refreshQueued = false;
+function handleRemoteChange(){
+  // Debounce: si llegan varios cambios juntos (ej. cargar_excel que reescribe todo),
+  // refresca una sola vez en el próximo frame en vez de una vez por fila.
+  if(refreshQueued) return;
+  refreshQueued = true;
+  requestAnimationFrame(async ()=>{
+    refreshQueued = false;
+    await loadAllData();
+    rerenderCurrentPage();
+  });
+}
+
+function rerenderCurrentPage(){
+  const cur = document.querySelector('.page.on');
+  if(!cur) return;
+  const id = cur.id.replace('page-','');
+  if(id==='inventario')    renderAdminInv();
+  if(id==='despachos')     renderD();
+  if(id==='retornos')      renderR();
+  if(id==='mi-inventario') renderCamInv();
+  if(id==='mis-retornos')  renderMR();
+  if(id==='despachos-d')   renderDD();
+}
+
+/* ══════════════════════════════════════
+   ESTADO GLOBAL (caché local de lo que hay en Supabase)
+══════════════════════════════════════ */
+let ROL = null;
+let CAM = null;
+let isAuthenticated = false;
+
+// Caché en memoria — se llena desde Supabase y se refresca por Realtime.
+// La fuente de verdad siempre es la base de datos, nunca esta caché.
+let biomar    = {};
+let camStock  = {};
+let retornos  = [];
+let despachos = [];
+let excelLoaded = false;
+let lastUploadFname = '';
+let lastUploadDate = '';
+let retV = null;
+
+SECTS.forEach(s=>{
+  biomar[s]   = {madera:0,azul1:0,azul2:0,verde:0};
+  camStock[s] = {madera:0,azul1:0,azul2:0,verde:0};
+});
+
+async function loadAllData(){
+  if(!sb){
+    toast('Sin conexión a la base de datos: ' + (sdkLoadError||'revisa tu internet'));
+    return;
+  }
+  const [invRes, despRes, retRes, cargaRes] = await Promise.all([
+    sb.from('inventario').select('*'),
+    sb.from('despachos').select('*').order('created_at',{ascending:false}),
+    sb.from('retornos').select('*').order('created_at',{ascending:false}),
+    sb.from('cargas_excel').select('*').order('cargado_at',{ascending:false}).limit(1),
+  ]);
+
+  if(invRes.error){ console.error(invRes.error); toast('Error cargando inventario: '+errMsg(invRes.error)); return; }
+  if(despRes.error){ console.error(despRes.error); toast('Error cargando despachos: '+errMsg(despRes.error)); }
+  if(retRes.error){ console.error(retRes.error); toast('Error cargando retornos: '+errMsg(retRes.error)); }
+  SECTS.forEach(s=>{ biomar[s]={madera:0,azul1:0,azul2:0,verde:0}; camStock[s]={madera:0,azul1:0,azul2:0,verde:0}; });
+  (invRes.data||[]).forEach(row=>{
+    biomar[row.sector][row.producto] = row.biomar;
+    camStock[row.sector][row.producto] = row.camaronera;
+  });
+
+  despachos = (despRes.data||[]).map(d=>({
+    id:d.id, numero:d.numero, fecha:d.fecha, semana:d.semana||'', cliente:d.cliente||'',
+    sector:d.sector, producto:d.producto, egreso:d.egreso, nota:d.nota||'', guia:d.guia||'',
+  }));
+
+  retornos = (retRes.data||[]).map(r=>({
+    id:r.id, fecha:r.fecha, camaronera:r.camaronera, guia:r.guia||'', chofer:r.chofer||'', placa:r.placa||'',
+    madera:r.madera, azul1:r.azul1, azul2:r.azul2, verde:r.verde,
+    estado:r.estado, guiaBim:r.guia_biomar||'', obs:r.observaciones||'',
+  }));
+
+  const carga = (cargaRes.data||[])[0];
+  excelLoaded = !!carga;
+  lastUploadFname = carga ? carga.nombre_archivo : '';
+  lastUploadDate = carga ? new Date(carga.cargado_at).toLocaleString('es-EC') : '';
+}
+
+/* ══════════════════════════════════════
+   ROLE SCREEN
+══════════════════════════════════════ */
+let pendingRole = null, pendingCam = null;
+
+function selectRole(r){
+  pendingRole = r; pendingCam = null;
+  document.getElementById('card-admin').classList.toggle('selected-admin', r==='admin');
+  document.getElementById('card-desp').classList.toggle('selected-desp', r==='despachador');
+  document.getElementById('cam-select').classList.toggle('show', r==='despachador');
+  document.getElementById('admin-login').classList.toggle('show', r==='admin');
+  document.getElementById('login-error').classList.remove('show');
+  document.querySelectorAll('.rs-cam-btn').forEach(b=>b.classList.remove('on'));
+  if(r==='admin'){
+    document.getElementById('rs-enter').disabled = false;
+    document.getElementById('login-user').focus();
+  } else {
+    document.getElementById('rs-enter').disabled = true; // needs camaronera too
+  }
+}
+
+function selectCam(s, btn){
+  pendingCam = s;
+  document.querySelectorAll('.rs-cam-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('rs-enter').disabled = false;
+}
+
+async function enterApp(){
+  if(!pendingRole) return;
+
+  if(pendingRole==='admin'){
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    if(user !== ADMIN_CREDENTIALS.user || pass !== ADMIN_CREDENTIALS.pass){
+      document.getElementById('login-error').classList.add('show');
+      return;
+    }
+    isAuthenticated = true;
+  } else {
+    if(!pendingCam) return; // safety: no entrar sin camaronera
+    isAuthenticated = true;
+  }
+
+  ROL = pendingRole;
+  CAM = pendingRole==='despachador' ? pendingCam : null;
+
+  const btn = document.getElementById('rs-enter');
+  if(btn){ btn.disabled=true; btn.textContent='Conectando…'; }
+
+  if(!sb){
+    if(btn){ btn.disabled=false; btn.textContent='Ingresar →'; }
+    toast('Sin conexión a la base de datos: ' + (sdkLoadError||'revisa tu internet e intenta de nuevo'));
+    ROL=null; CAM=null;
+    return;
+  }
+
+  try{
+    await loadAllData();
+  }catch(e){
+    console.error('Error cargando datos al entrar:', e);
+    if(btn){ btn.disabled=false; btn.textContent='Ingresar →'; }
+    toast('No se pudo conectar: ' + errMsg(e));
+    ROL=null; CAM=null;
+    return;
+  }
+
+  document.getElementById('role-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  if(btn){ btn.disabled=false; btn.textContent='Ingresar →'; }
+  subscribeRealtime();
+
+  buildApp();
+}
+
+function backToRoleScreen(){
+  document.getElementById('role-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  pendingRole=null; pendingCam=null; isAuthenticated=false; ROL=null; CAM=null;
+  document.getElementById('rs-enter').disabled=true;
+  document.getElementById('card-admin').classList.remove('selected-admin');
+  document.getElementById('card-desp').classList.remove('selected-desp');
+  document.getElementById('cam-select').classList.remove('show');
+  document.getElementById('admin-login').classList.remove('show');
+  document.getElementById('login-error').classList.remove('show');
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.querySelectorAll('.rs-cam-btn').forEach(b=>b.classList.remove('on'));
+  if(liveChannel){ sb.removeChannel(liveChannel); liveChannel=null; }
+}
+
+// Enter key en campos de login dispara el submit
+document.addEventListener('DOMContentLoaded', ()=>{
+  ['login-user','login-pass'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('keydown', e=>{ if(e.key==='Enter') enterApp(); });
+  });
+});
+
+/* ══════════════════════════════════════
+   BUILD APP SEGÚN ROL
+══════════════════════════════════════ */
+function buildApp(){
+  const isA = ROL==='admin';
+  document.getElementById('wdot').className = 'wdot '+(isA?'wd-a':'wd-d');
+  document.getElementById('wlbl').textContent = isA ? 'Admin' : CAM;
+  if(isA) buildAdminApp();
+  else    buildDespApp();
+}
+
+function buildAdminApp(){
+  const tabs = [
+    {id:'inventario', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>', label:'Inventario', badge:false},
+    {id:'despachos',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>', label:'Despachos', badge:false},
+    {id:'retornos',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>', label:'Retornos', badge:true},
+  ];
+  buildNavTabs(tabs);
+  document.getElementById('pages').innerHTML = `
+    ${adminInvPage()}
+    ${adminDespPage()}
+    ${adminRetPage()}
+  `;
+  goPage('inventario');
+}
+
+function buildDespApp(){
+  const tabs = [
+    {id:'mi-inventario', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>', label:'Mi Inventario', badge:false},
+    {id:'mis-retornos',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>', label:'Mis Retornos', badge:false},
+    {id:'despachos-d',   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>', label:'Despachos', badge:false},
+  ];
+  buildNavTabs(tabs);
+  document.getElementById('pages').innerHTML = `
+    ${despInvPage()}
+    ${despRetPage()}
+    ${despDespPage()}
+  `;
+  goPage('mi-inventario');
+}
+
+function buildNavTabs(tabs){
+  document.getElementById('ntabs').innerHTML = tabs.map(t=>`
+    <button class="ntab${t.id===(ROL==='admin'?'inventario':'mi-inventario')?' on':''}"
+            data-page="${t.id}" onclick="goPage('${t.id}',this)">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${t.icon.replace(/<svg[^>]*>/,'').replace('</svg>','')}</svg>
+      ${t.label}
+      ${t.badge?'<span class="nbadge" id="nb-top" data-n="0">0</span>':''}
+    </button>
+  `).join('');
+  document.getElementById('btabs').innerHTML = tabs.map(t=>`
+    <button class="btab${t.id===(ROL==='admin'?'inventario':'mi-inventario')?' on':''}"
+            data-page="${t.id}" onclick="goPage('${t.id}',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${t.icon.replace(/<svg[^>]*>/,'').replace('</svg>','')}</svg>
+      ${t.label}
+      ${t.badge?'<span class="bbadge" id="nb-bot" style="display:none">0</span>':''}
+    </button>
+  `).join('');
+}
+
+/* ══════════════════════════════════════
+   PAGE TEMPLATES
+══════════════════════════════════════ */
+function adminInvPage(){return`
+<div class="page" id="page-inventario">
+  <div class="wrap">
+    <div class="ph">
+      <div><div class="ph-t">Inventario en Tiempo Real</div><div class="ph-s">Stock Biomar · Camaroneras · Tránsito — se actualiza al cargar el Excel diario</div></div>
+      <div class="ph-a">
+        <label class="btn bteal" for="file-xl" style="cursor:pointer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Cargar Excel
+        </label>
+        <input type="file" id="file-xl" accept=".xlsx,.xls,.xlsm" style="display:none" onchange="loadXL(this)">
+      </div>
+    </div>
+    <div class="upload-status" id="inv-status">
+      <div class="us-hd"><div class="us-title" id="inv-fname"></div><div class="us-date" id="inv-fdate"></div></div>
+      <div class="us-note" id="inv-note"></div>
+    </div>
+    <div class="upload-zone" id="inv-drop"
+         onclick="document.getElementById('file-xl').click()"
+         ondragover="event.preventDefault();this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')"
+         ondrop="dropXL(event)">
+      <div class="uz-icon">📊</div>
+      <div class="uz-title">Cargar Excel de Biomar</div>
+      <div class="uz-sub">Solo se consideran los <strong>Egresos</strong> (despachos) del archivo. Arrastra el archivo aquí o haz clic para seleccionarlo</div>
+      <div class="uz-fmt">Acepta: .xlsx · .xlsm · .xls</div>
+    </div>
+    <div class="sum-grid" id="sum-grid"></div>
+    <div id="inv-tables"></div>
+  </div>
+</div>`;}
+
+function adminDespPage(){return`
+<div class="page" id="page-despachos">
+  <div class="wrap">
+    <div class="ph">
+      <div><div class="ph-t">Despachos</div><div class="ph-s">Salidas de Biomar hacia las camaroneras — solo egresos</div></div>
+      <div class="ph-a">
+        <button class="btn bteal" onclick="openMo('mo-d')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo Despacho
+        </button>
+      </div>
+    </div>
+    <div class="filters">
+      <input class="fi fi-s" placeholder="Buscar número, guía…" oninput="renderD()">
+      <select class="fi" id="fd-sec" onchange="renderD()"><option value="">Todos los sectores</option><option>SANTAY</option><option>CANTAGALLO</option><option>GARZAL</option><option>CHURUTE</option></select>
+      <select class="fi" id="fd-cli" onchange="renderD()"><option value="">Todos los clientes</option><option>PRODUMAR S.A.</option><option>LIMBOMAR S.A.</option></select>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-t">Registro de Despachos</div><span class="card-c" id="d-cnt"></span></div>
+      <div class="tscroll"><table class="dt">
+        <thead><tr><th>Número</th><th>Fecha</th><th>Cliente</th><th>Sector</th><th>Producto</th><th class="r">Cant.</th><th>Guía</th><th>Acc.</th></tr></thead>
+        <tbody id="tb-d"></tbody>
+      </table></div>
+      <div class="mlist" id="ml-d"></div>
+    </div>
+  </div>
+</div>`;}
+
+function adminRetPage(){return`
+<div class="page" id="page-retornos">
+  <div class="wrap">
+    <div class="ph">
+      <div><div class="ph-t">Retornos</div><div class="ph-s">Valida los retornos En Tránsito para actualizar el stock</div></div>
+    </div>
+    <div class="tbanner" id="tbanner" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <span>Retornos <strong>En Tránsito</strong> pendientes de validación</span>
+      <span class="tbc" id="tbc">0</span>
+    </div>
+    <div class="filters">
+      <select class="fi" id="fr-est" onchange="renderR()"><option value="">Todos los estados</option><option>En Transito</option><option>Recibido</option></select>
+      <select class="fi" id="fr-sec" onchange="renderR()"><option value="">Todas las camaroneras</option><option>SANTAY</option><option>CANTAGALLO</option><option>GARZAL</option><option>CHURUTE</option></select>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-t">Historial de Retornos</div><span class="card-c" id="r-cnt"></span></div>
+      <div class="tscroll"><table class="dt">
+        <thead><tr><th>Fecha</th><th>Camaronera</th><th>Guía</th><th>Chofer</th><th>Placa</th><th class="r">Madera</th><th class="r">Azul 1×1</th><th class="r">Azul 1,2</th><th class="r">Verde</th><th class="r">Total</th><th>Estado</th><th>G.Bim</th><th>Acc.</th></tr></thead>
+        <tbody id="tb-r"></tbody>
+      </table></div>
+      <div class="mlist" id="ml-r"></div>
+    </div>
+  </div>
+</div>`;}
+
+function despInvPage(){
+  const c = CAM;
+  return`
+<div class="page" id="page-mi-inventario">
+  <div class="wrap">
+    <div class="ph">
+      <div><div class="ph-t">Inventario</div><div class="ph-s">Stock actual de tu camaronera</div></div>
+    </div>
+    <div class="cam-banner ${SCAM_CLS[c]}">
+      <div class="cb-icon">🏗️</div>
+      <div class="cb-body">
+        <div class="cb-title">Camaronera ${c}</div>
+        <div class="cb-sub">Inventario actualizado según los despachos y retornos confirmados</div>
+      </div>
+      <div class="cb-total">
+        <div class="cb-total-v" id="cam-total-v">—</div>
+        <div class="cb-total-l">pallets en sitio</div>
+      </div>
+    </div>
+    <div id="cam-inv-table"></div>
+  </div>
+</div>`;}
+
+function despRetPage(){return`
+<div class="page" id="page-mis-retornos">
+  <div class="wrap">
+    <div class="ph">
+      <div><div class="ph-t">Mis Retornos</div><div class="ph-s">Registra y consulta los retornos desde ${CAM}</div></div>
+      <div class="ph-a">
+        <button class="btn bteal" onclick="openRetorno()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Registrar Retorno
+        </button>
+      </div>
+    </div>
+    <div class="alert a-teal" style="margin-bottom:14px">
+      <div class="a-icon">ℹ</div>
+      <div><div class="a-t">Proceso de retorno</div>
+      <div class="a-b">Al registrar, los pallets quedan <strong>En Tránsito</strong>. El Admin valida la llegada y cambia el estado a <strong>Recibido</strong>.</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-t">Retornos de ${CAM}</div><span class="card-c" id="mr-cnt"></span></div>
+      <div class="tscroll"><table class="dt">
+        <thead><tr><th>Fecha</th><th>Guía</th><th>Chofer</th><th>Placa</th><th class="r">Total</th><th>Estado</th><th>G.Biomar</th></tr></thead>
+        <tbody id="tb-mr"></tbody>
+      </table></div>
+      <div class="mlist" id="ml-mr"></div>
+    </div>
+  </div>
+</div>`;}
+
+function despDespPage(){return`
+<div class="page" id="page-despachos-d">
+  <div class="wrap">
+    <div class="ph">
+      <div><div class="ph-t">Despachos a ${CAM}</div><div class="ph-s">Salidas de Biomar hacia tu camaronera</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-t">Registro</div><span class="card-c" id="dd-cnt"></span></div>
+      <div class="tscroll"><table class="dt">
+        <thead><tr><th>Número</th><th>Fecha</th><th>Producto</th><th class="r">Cant.</th><th>Guía</th></tr></thead>
+        <tbody id="tb-dd"></tbody>
+      </table></div>
+      <div class="mlist" id="ml-dd"></div>
+    </div>
+  </div>
+</div>`;}
+
+/* ══════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════ */
+function goPage(id, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ntab,.btab').forEach(t=>t.classList.remove('on'));
+  const pg = document.getElementById('page-'+id);
+  if(pg) pg.classList.add('on');
+  document.querySelectorAll(`[data-page="${id}"]`).forEach(el=>el.classList.add('on'));
+  if(id==='inventario')    renderAdminInv();
+  if(id==='despachos')     renderD();
+  if(id==='retornos')      renderR();
+  if(id==='mi-inventario') renderCamInv();
+  if(id==='mis-retornos')  renderMR();
+  if(id==='despachos-d')   renderDD();
+}
+
+/* ══════════════════════════════════════
+   UTILS
+══════════════════════════════════════ */
+const today = ()=>new Date().toISOString().split('T')[0];
+const fmtD  = iso=>{ if(!iso)return'—'; const[y,m,d]=iso.split('-'); return`${d}/${m}/${y}`; };
+const totR  = r=>PKEYS.reduce((a,k)=>a+(r[k]||0),0);
+const traS  = (s,k)=>retornos.filter(r=>r.camaronera===s&&r.estado==='En Transito').reduce((a,r)=>a+(r[k]||0),0);
+const sTag  = s=>`<span class="tag ${STAG[s]||''}">${s}</span>`;
+const eTag  = e=>{ const m={'En Transito':'ttr','Recibido':'trec'}; return`<span class="tag ${m[e]||''}">${e}</span>`; };
+function pChip(k){ return `<span class="pchip"><span class="pdot ${PDOT[k]}"></span>${PLABEL[k]}</span>`; }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2800); }
+function openMo(id){ document.getElementById(id).classList.add('on'); document.querySelectorAll(`#${id} input[type="date"]`).forEach(i=>{ if(!i.value) i.value=today(); }); }
+function closeMo(id){ document.getElementById(id).classList.remove('on'); }
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }));
+
+function nInv(n){ if(n===0)return'<span class="n-zero">—</span>'; if(n<0)return`<span class="n-neg">${n}</span>`; return`<span class="n-pos">${n}</span>`; }
+function nTra(n){ if(!n||n===0)return'<span class="n-zero">—</span>'; return`<span class="n-tra">${n}</span>`; }
+function nDif(n){ if(n===0)return'<span class="n-zero">0</span>'; if(n<0)return`<span class="n-dn">${n}</span>`; return`<span class="n-dp">+${n}</span>`; }
+
+function setBadges(){
+  const n = retornos.filter(r=>r.estado==='En Transito').length;
+  const nt=document.getElementById('nb-top'); const nb=document.getElementById('nb-bot');
+  if(nt){ nt.textContent=n; nt.dataset.n=n; }
+  if(nb){ nb.textContent=n; nb.style.display=n>0?'flex':'none'; }
+}
+
+/* ══════════════════════════════════════
+   EXCEL PARSER — SOLO EGRESOS (despachos)
+   Los ingresos del Excel se IGNORAN por completo,
+   tal como lo pidió Mario: el control de qué llegó
+   de vuelta a bodega lo hace el flujo de Retornos
+   (Despachador registra → Admin valida), no el Excel.
+══════════════════════════════════════ */
+const PMAP_XL = {
+  'PALLETS METÁLICOS 1200 x 1200 MM':'azul2',       // azul grande
+  'PALLETS METÁLICOS 1200 x 1000 MM':'azul1',       // azul chico
+  'PALLETS METALICOS VERDES 1,2*1':'verde',
+  'PALLETS METALICOS VERDES 1,2*1,2':'verde',
+  'PALLETS DE MADERA  1200 x 1000 MM':'madera',
+  'PALLETS DE MADERA 1200 x 1000 MM':'madera',
+};
+function normProd(raw){
+  const s=String(raw||'').trim().toUpperCase().replace(/\s+/g,' ');
+  if(PMAP_XL[s]) return PMAP_XL[s];
+  if(s.includes('MADERA')) return 'madera';
+  if(s.includes('VERDE'))  return 'verde';
+  if(s.includes('1200')&&(s.includes(' 1200')||s.includes('1200 '))) return 'azul2';
+  if(s.includes('1200')&&s.includes('1000')) return 'azul1';
+  return null;
+}
+function xlDate(serial){ if(!serial||isNaN(serial))return''; return new Date((serial-25569)*86400*1000).toISOString().split('T')[0]; }
+
+function dropXL(ev){ ev.preventDefault(); document.getElementById('inv-drop')?.classList.remove('drag'); const f=ev.dataTransfer?.files?.[0]; if(f) procFile(f); }
+function loadXL(input){ const f=input.files[0]; if(!f)return; procFile(f); input.value=''; }
+function procFile(file){
+  const r=new FileReader();
+  r.onload=async e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary',cellDates:false});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      await parseRows(XLSX.utils.sheet_to_json(ws,{header:1,defval:''}), file.name);
+    }catch(err){ toast('Error al leer el archivo'); console.error(err); }
+  };
+  r.readAsBinaryString(file);
+}
+async function parseRows(rows, fname){
+  if(!Array.isArray(rows) || rows.length===0){
+    toast('El archivo está vacío o no tiene filas legibles');
+    return;
+  }
+  let hi=0;
+  for(let i=0;i<Math.min(rows.length,5);i++){
+    if(rows[i] && rows[i].some(c=>String(c||'').toLowerCase().includes('número')||String(c||'').toLowerCase().includes('producto'))){ hi=i; break; }
+  }
+  if(!rows[hi]){
+    toast('No se pudo encontrar el encabezado en el archivo');
+    return;
+  }
+  const hdr=rows[hi].map(h=>String(h||'').trim().toLowerCase());
+  const col=n=>hdr.findIndex(h=>h.includes(n));
+  const cNum=col('número'); const cProd=col('producto'); const cEgr=col('egreso');
+  const cFec=col('fecha'); const cSem=col('semana'); const cCli=col('cliente');
+  const cNota=col('nota'); const cSec=col('sector2')!==-1?col('sector2'):col('sector'); const cGui=col('guia')!==-1?col('guia'):col('guía');
+
+  // Arma el array de despachos en memoria — se manda TODO junto al backend,
+  // que hace el reset + reinsert de forma atómica (función cargar_excel).
+  const parsedRows = [];
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i]; if(!r||!r[cNum]) continue;
+    const num=String(r[cNum]||'').trim();
+    const prod=normProd(r[cProd]);
+    const egr=parseFloat(r[cEgr])||0;
+    // Los ingresos (r[cIng]) se ignoran deliberadamente — solo egresos cuentan
+    const fecha=typeof r[cFec]==='number'?xlDate(r[cFec]):String(r[cFec]||'').trim();
+    const sem=String(r[cSem]||'').trim();
+    const cli=String(r[cCli]||'').trim();
+    const nota=String(r[cNota]||'').trim();
+    const sec=String(r[cSec]||'').trim().toUpperCase();
+    const gui=String(r[cGui]||'').trim();
+    if(!prod||!SECTS.includes(sec)) continue;
+    if(egr<=0) continue; // solo egresos — si no hay egreso, la fila no aporta a despachos
+    if(!fecha){ continue; } // fecha inválida, se descarta la fila
+    parsedRows.push({numero:num, fecha, semana:sem, cliente:cli, sector:sec, producto:prod, egreso:egr, nota, guia:gui});
+  }
+
+  if(parsedRows.length===0){
+    toast('No se encontraron despachos válidos (egresos) en el archivo');
+    return;
+  }
+
+  const st=document.getElementById('inv-status');
+  if(st){ document.getElementById('inv-note').textContent='Subiendo a la base de datos…'; st.style.display='block'; }
+
+  const {data, error} = await sb.rpc('cargar_excel',{p_nombre:fname, p_despachos:parsedRows});
+  if(error){ toast('Error al guardar en la base: '+errMsg(error)); return; }
+
+  await loadAllData();
+  if(st){
+    document.getElementById('inv-fname').textContent=lastUploadFname;
+    document.getElementById('inv-fdate').textContent=lastUploadDate;
+    document.getElementById('inv-note').textContent=`${data} despachos (egresos) procesados — los ingresos del archivo fueron ignorados`;
+    document.getElementById('inv-drop').style.display='none';
+  }
+  renderAdminInv(); renderD();
+  toast(`Excel cargado — ${data} despachos procesados`);
+}
+
+/* ══════════════════════════════════════
+   RENDER: ADMIN INVENTARIO
+   El dashboard de 4 camaroneras SIEMPRE se muestra,
+   con o sin Excel cargado — arranca en cero y se
+   actualiza cada vez que se sube un nuevo archivo.
+══════════════════════════════════════ */
+function renderAdminInv(){
+  const sg=document.getElementById('sum-grid'); const it=document.getElementById('inv-tables');
+  if(!sg||!it) return;
+
+  sg.innerHTML=SECTS.map(s=>{
+    let bT=0,cT=0,tT=0;
+    PKEYS.forEach(k=>{ bT+=(biomar[s][k]||0); cT+=(camStock[s][k]||0); tT+=traS(s,k); });
+    const hasT=tT>0; const pill=hasT?'sp-warn':'sp-ok'; const pillL=hasT?'Tránsito':'OK';
+    return`<div class="scard">
+      <div class="sc-top"><div class="sc-name"><div class="scdot ${SDOT[s]}"></div>${s}</div><span class="spill ${pill}">${pillL}</span></div>
+      <div class="sc-nums">
+        <div class="snum"><span class="sn-l">Biomar</span><span class="sn-v" style="color:var(--tealT)">${bT}</span></div>
+        <div class="snum"><span class="sn-l">Camaronera</span><span class="sn-v" style="color:var(--bluT)">${cT}</span></div>
+        <div class="snum"><span class="sn-l">Tránsito</span><span class="sn-v" style="color:${tT>0?'var(--ambT)':'var(--t3)'}">${tT}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  it.innerHTML=SECTS.map(s=>{
+    const bT=PKEYS.reduce((a,k)=>a+(biomar[s][k]||0),0);
+    const cT=PKEYS.reduce((a,k)=>a+(camStock[s][k]||0),0);
+    const tT=PKEYS.reduce((a,k)=>a+traS(s,k),0);
+    const dT=bT-cT-tT;
+    return`<div class="inv-section">
+      <div class="inv-st"><div class="inv-sbar ${SBAR[s]}"></div>${s}</div>
+      <div class="inv-wrap"><table class="itbl">
+        <thead><tr><th>Producto →</th>${PKEYS.map(k=>`<th>${PLABEL[k]}</th>`).join('')}<th>Total</th></tr></thead>
+        <tbody>
+          <tr class="row-bim"><td>Inventario Biomar</td>${PKEYS.map(k=>`<td>${nInv(biomar[s][k]||0)}</td>`).join('')}<td>${nInv(bT)}</td></tr>
+          <tr class="row-cam"><td>Inventario ${s}</td>${PKEYS.map(k=>`<td>${nInv(camStock[s][k]||0)}</td>`).join('')}<td>${nInv(cT)}</td></tr>
+          <tr class="row-tra"><td>En tránsito</td>${PKEYS.map(k=>`<td>${nTra(traS(s,k))}</td>`).join('')}<td>${nTra(tT)}</td></tr>
+          <tr class="row-dif"><td>Diferencia</td>${PKEYS.map(k=>{ const d=(biomar[s][k]||0)-(camStock[s][k]||0)-traS(s,k); return`<td>${nDif(d)}</td>`; }).join('')}<td>${nDif(dT)}</td></tr>
+        </tbody>
+      </table></div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   RENDER: DESPACHOS (admin) — solo egresos
+══════════════════════════════════════ */
+function renderD(){
+  const tb=document.getElementById('tb-d'); const ml=document.getElementById('ml-d'); if(!tb) return;
+  const q=(document.querySelector('#page-despachos .fi-s')?.value||'').toLowerCase();
+  const sec=document.getElementById('fd-sec')?.value||'';
+  const cli=document.getElementById('fd-cli')?.value||'';
+  const list=despachos.filter(d=>{ if(sec&&d.sector!==sec)return false; if(cli&&d.cliente!==cli)return false; if(q&&!`${d.numero} ${d.nota} ${d.guia}`.toLowerCase().includes(q))return false; return true; });
+  document.getElementById('d-cnt').textContent=`${list.length} reg.`;
+  const EMPTY=`<tr><td colspan="8"><div class="empty"><div class="empty-ic"><svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg></div><div class="empty-t">${excelLoaded?'Sin registros':'Carga el Excel para ver los despachos'}</div></div></td></tr>`;
+  tb.innerHTML=!list.length?EMPTY:list.map(d=>`<tr>
+    <td><strong class="tmono">${d.numero}</strong></td><td class="tsm">${fmtD(d.fecha)}</td>
+    <td><span class="tag ${d.cliente.includes('LIMBOMAR')?'tlimb':'tprod'}">${d.cliente.split(' ')[0]}</span></td>
+    <td>${sTag(d.sector)}</td><td class="tsm">${pChip(d.producto)}</td>
+    <td class="r tmono">${d.egreso}</td><td class="txs">${d.guia||'—'}</td>
+    <td><button class="btn bdanger bsm" onclick="delD(${d.id})">Del.</button></td>
+  </tr>`).join('');
+  if(!ml) return;
+  if(!list.length){ ml.innerHTML=`<div class="empty"><div class="empty-ic"><svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg></div><div class="empty-t">${excelLoaded?'Sin registros':'Carga el Excel'}</div></div>`; return; }
+  ml.innerHTML=list.map(d=>`<div class="mcard">
+    <div class="mtop"><div>${sTag(d.sector)}<div class="mtit" style="margin-top:6px">${d.numero}</div><div class="msub">${fmtD(d.fecha)}</div></div>
+    <div style="text-align:right"><span class="tag ${d.cliente.includes('LIMBOMAR')?'tlimb':'tprod'}">${d.cliente.split(' ')[0]}</span><div class="mqbig" style="margin-top:6px">${d.egreso}</div><div class="mql">unidades</div></div></div>
+    <div class="mfields"><div class="mfield"><span class="mfl">Producto</span><span class="mfv">${pChip(d.producto)}</span></div><div class="mfield"><span class="mfl">Guía</span><span class="mfv mono">${d.guia||'—'}</span></div></div>
+    <div class="macts"><button class="btn bdanger bsm" onclick="delD(${d.id})">Eliminar</button></div>
+  </div>`).join('');
+}
+async function guardarD(){
+  const numero=document.getElementById('d-num').value.trim();
+  const fecha=document.getElementById('d-fec').value;
+  const sector=document.getElementById('d-sec').value;
+  const producto=document.getElementById('d-pro').value;
+  const egreso=parseInt(document.getElementById('d-qty').value)||0;
+  const nota=document.getElementById('d-nota').value.trim();
+  const guia=document.getElementById('d-gui').value.trim();
+  const cliente=document.getElementById('d-cli').value;
+  if(!numero||!fecha||egreso<=0){ toast('Completa número, fecha y cantidad'); return; }
+
+  const {error} = await sb.rpc('registrar_despacho',{
+    p_numero:numero, p_fecha:fecha, p_semana:'', p_cliente:cliente,
+    p_sector:sector, p_producto:producto, p_egreso:egreso, p_nota:nota, p_guia:guia,
+  });
+  if(error){ toast('Error al guardar: '+errMsg(error)); return; }
+
+  closeMo('mo-d');
+  await loadAllData(); renderD(); renderAdminInv();
+  toast(`Despacho ${numero} — ${egreso} unidades → ${sector}`);
+}
+async function delD(id){
+  if(!confirm('¿Eliminar este despacho?')) return;
+  const {error} = await sb.rpc('eliminar_despacho',{p_id:id});
+  if(error){ toast('Error al eliminar: '+errMsg(error)); return; }
+  await loadAllData(); renderD(); renderAdminInv();
+  toast('Despacho eliminado');
+}
+
+/* ══════════════════════════════════════
+   RENDER: RETORNOS (admin full)
+══════════════════════════════════════ */
+function renderR(){
+  const tb=document.getElementById('tb-r'); const ml=document.getElementById('ml-r'); if(!tb) return;
+  const est=document.getElementById('fr-est')?.value||'';
+  const sec=document.getElementById('fr-sec')?.value||'';
+  const list=retornos.filter(r=>{ if(est&&r.estado!==est)return false; if(sec&&r.camaronera!==sec)return false; return true; });
+  const enT=retornos.filter(r=>r.estado==='En Transito').length;
+  const bann=document.getElementById('tbanner');
+  if(bann){ if(enT>0){ bann.style.display='flex'; document.getElementById('tbc').textContent=enT; } else bann.style.display='none'; }
+  document.getElementById('r-cnt').textContent=`${list.length} reg.`;
+  setBadges();
+  const EMPTY=`<tr><td colspan="13"><div class="empty"><div class="empty-ic"><svg viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div><div class="empty-t">Sin retornos</div></div></td></tr>`;
+  tb.innerHTML=!list.length?EMPTY:list.map(r=>{
+    const tot=totR(r); const esT=r.estado==='En Transito';
+    return`<tr class="${esT?'rtr':''}">
+      <td class="tsm">${fmtD(r.fecha)}</td><td>${sTag(r.camaronera)}</td>
+      <td class="txs">${r.guia||'—'}</td><td class="tsm">${r.chofer||'—'}</td><td class="txs">${r.placa||'—'}</td>
+      <td class="r txs">${r.madera||0}</td><td class="r txs">${r.azul1||0}</td><td class="r txs">${r.azul2||0}</td>
+      <td class="r txs">${r.verde||0}</td>
+      <td class="r"><strong>${tot}</strong></td><td>${eTag(r.estado)}</td>
+      <td class="txs">${r.guiaBim||'—'}</td>
+      <td>${esT?`<button class="btn bsuccess bsm" onclick="openVal(${r.id})">✓ Validar</button>`:`<span style="font-size:11px;color:var(--grnT);font-weight:700">Recibido ✓</span>`}</td>
+    </tr>`;
+  }).join('');
+  if(!ml) return;
+  if(!list.length){ ml.innerHTML=`<div class="empty"><div class="empty-ic"><svg viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div><div class="empty-t">Sin retornos</div></div>`; return; }
+  ml.innerHTML=list.map(r=>{
+    const tot=totR(r); const esT=r.estado==='En Transito';
+    const nz=PKEYS.filter(k=>r[k]>0);
+    return`<div class="mcard ${esT?'mtr':''}">
+      <div class="mtop"><div>${sTag(r.camaronera)}<div class="msub" style="margin-top:5px">${fmtD(r.fecha)} · Guía ${r.guia||'—'}</div><div class="msub">${r.chofer||''} ${r.placa?'· '+r.placa:''}</div></div>
+      <div style="text-align:right">${eTag(r.estado)}<div class="mqbig" style="margin-top:6px">${tot}</div><div class="mql">pallets</div></div></div>
+      ${nz.length?`<div class="mqtys">${nz.map(k=>`<div class="mqchip"><span class="mqcl">${PSHORT[k]}</span><span class="mqcv">${r[k]}</span></div>`).join('')}</div>`:''}
+      ${esT?`<div class="macts"><button class="btn bsuccess" style="flex:1;justify-content:center" onclick="openVal(${r.id})">✓ Validar llegada</button></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   RENDER: DESPACHADOR — inventario
+══════════════════════════════════════ */
+function renderCamInv(){
+  const s=CAM; const ct=document.getElementById('cam-inv-table'); const tv=document.getElementById('cam-total-v'); if(!ct) return;
+  const bT=PKEYS.reduce((a,k)=>a+(biomar[s][k]||0),0);
+  const cT=PKEYS.reduce((a,k)=>a+(camStock[s][k]||0),0);
+  const tT=PKEYS.reduce((a,k)=>a+traS(s,k),0);
+  const dT=bT-cT-tT;
+  if(tv) tv.textContent=cT;
+  ct.innerHTML=`<div class="inv-wrap"><table class="itbl">
+    <thead><tr><th>Producto →</th>${PKEYS.map(k=>`<th>${PLABEL[k]}</th>`).join('')}<th>Total</th></tr></thead>
+    <tbody>
+      <tr class="row-bim"><td>Inventario Biomar</td>${PKEYS.map(k=>`<td>${nInv(biomar[s][k]||0)}</td>`).join('')}<td>${nInv(bT)}</td></tr>
+      <tr class="row-cam"><td>Inventario ${s}</td>${PKEYS.map(k=>`<td>${nInv(camStock[s][k]||0)}</td>`).join('')}<td>${nInv(cT)}</td></tr>
+      <tr class="row-tra"><td>En tránsito</td>${PKEYS.map(k=>`<td>${nTra(traS(s,k))}</td>`).join('')}<td>${nTra(tT)}</td></tr>
+      <tr class="row-dif"><td>Diferencia</td>${PKEYS.map(k=>{ const d=(biomar[s][k]||0)-(camStock[s][k]||0)-traS(s,k); return`<td>${nDif(d)}</td>`; }).join('')}<td>${nDif(dT)}</td></tr>
+    </tbody>
+  </table></div>`;
+}
+
+/* ══════════════════════════════════════
+   RENDER: MIS RETORNOS (despachador)
+══════════════════════════════════════ */
+function renderMR(){
+  const tb=document.getElementById('tb-mr'); const ml=document.getElementById('ml-mr'); if(!tb) return;
+  const list=retornos.filter(r=>r.camaronera===CAM);
+  document.getElementById('mr-cnt').textContent=`${list.length} reg.`;
+  const EMPTY=`<tr><td colspan="7"><div class="empty"><div class="empty-ic"><svg viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div><div class="empty-t">Sin retornos</div><div class="empty-s">Registra tu primer retorno</div></div></td></tr>`;
+  tb.innerHTML=!list.length?EMPTY:list.map(r=>{
+    const tot=totR(r); const esT=r.estado==='En Transito';
+    return`<tr class="${esT?'rtr':''}">
+      <td class="tsm">${fmtD(r.fecha)}</td><td class="txs">${r.guia||'—'}</td>
+      <td class="tsm">${r.chofer||'—'}</td><td class="txs">${r.placa||'—'}</td>
+      <td class="r"><strong>${tot}</strong></td><td>${eTag(r.estado)}</td>
+      <td class="txs">${r.guiaBim||'—'}</td>
+    </tr>`;
+  }).join('');
+  if(!ml) return;
+  if(!list.length){ ml.innerHTML=`<div class="empty"><div class="empty-ic"><svg viewBox="0 0 24 24"><path d="M9 17H7A5 5 0 017 7h2"/><path d="M15 7h2a5 5 0 010 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div><div class="empty-t">Sin retornos</div><div class="empty-s">Registra tu primer retorno</div></div>`; return; }
+  ml.innerHTML=list.map(r=>{
+    const tot=totR(r); const esT=r.estado==='En Transito';
+    const nz=PKEYS.filter(k=>r[k]>0);
+    return`<div class="mcard ${esT?'mtr':''}">
+      <div class="mtop"><div><div class="msub">${fmtD(r.fecha)} · Guía ${r.guia||'—'}</div><div class="msub">${r.chofer||''} ${r.placa?'· '+r.placa:''}</div></div>
+      <div style="text-align:right">${eTag(r.estado)}<div class="mqbig" style="margin-top:4px">${tot}</div><div class="mql">pallets</div></div></div>
+      ${nz.length?`<div class="mqtys">${nz.map(k=>`<div class="mqchip"><span class="mqcl">${PSHORT[k]}</span><span class="mqcv">${r[k]}</span></div>`).join('')}</div>`:''}
+      ${r.guiaBim?`<div style="font-size:11px;color:var(--t3);margin-top:6px">Guía Biomar: <strong style="color:var(--t2)">${r.guiaBim}</strong></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   RENDER: DESPACHOS (despachador, solo su sector)
+══════════════════════════════════════ */
+function renderDD(){
+  const tb=document.getElementById('tb-dd'); const ml=document.getElementById('ml-dd'); if(!tb) return;
+  const list=despachos.filter(d=>d.sector===CAM);
+  document.getElementById('dd-cnt').textContent=`${list.length} reg.`;
+  const EMPTY=`<tr><td colspan="5"><div class="empty"><div class="empty-ic"><svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg></div><div class="empty-t">${excelLoaded?'Sin despachos a '+CAM:'El admin aún no ha cargado el Excel'}</div></div></td></tr>`;
+  tb.innerHTML=!list.length?EMPTY:list.map(d=>`<tr>
+    <td><strong class="tmono">${d.numero}</strong></td><td class="tsm">${fmtD(d.fecha)}</td>
+    <td class="tsm">${pChip(d.producto)}</td><td class="r tmono">${d.egreso}</td>
+    <td class="txs">${d.guia||'—'}</td>
+  </tr>`).join('');
+  if(!ml) return;
+  if(!list.length){ ml.innerHTML=`<div class="empty"><div class="empty-ic"><svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg></div><div class="empty-t">${excelLoaded?'Sin despachos':'Admin no ha cargado Excel'}</div></div>`; return; }
+  ml.innerHTML=list.map(d=>`<div class="mcard">
+    <div class="mtop"><div><div class="mtit">${d.numero}</div><div class="msub">${fmtD(d.fecha)}</div></div>
+    <div style="text-align:right"><div class="mqbig">${d.egreso}</div><div class="mql">unidades</div></div></div>
+    <div class="mfields"><div class="mfield"><span class="mfl">Producto</span><span class="mfv">${pChip(d.producto)}</span></div><div class="mfield"><span class="mfl">Guía</span><span class="mfv mono">${d.guia||'—'}</span></div></div>
+  </div>`).join('');
+}
+
+/* ══════════════════════════════════════
+   RETORNOS CRUD
+══════════════════════════════════════ */
+function openRetorno(){
+  const cam = ROL==='despachador' ? CAM : 'SANTAY';
+  const sel = document.getElementById('r-cam');
+  sel.value=cam; sel.disabled=(ROL==='despachador');
+  openMo('mo-r');
+}
+async function guardarR(){
+  const btn=document.getElementById('btn-guardar-r');
+  if(btn && btn.disabled) return;
+  if(btn) btn.disabled=true;
+
+  const fecha=document.getElementById('r-fec').value;
+  const camaronera=document.getElementById('r-cam').value;
+  const guia=document.getElementById('r-gui').value.trim();
+  const chofer=document.getElementById('r-cho').value.trim();
+  const placa=document.getElementById('r-pla').value.trim();
+  const madera=parseInt(document.getElementById('r-ma').value)||0;
+  const azul1=parseInt(document.getElementById('r-maz').value)||0;
+  const azul2=parseInt(document.getElementById('r-mvg').value)||0;
+  const verde=0;
+
+  if(!fecha||!camaronera){ toast('Completa fecha y camaronera'); if(btn) btn.disabled=false; return; }
+  if([madera,azul1,azul2,verde].some(v=>v<0)){ toast('Las cantidades no pueden ser negativas'); if(btn) btn.disabled=false; return; }
+  if([madera,azul1,azul2,verde].some(v=>v>5000)){ toast('Una cantidad supera 5000 pallets — revisa si es un error de tipeo'); if(btn) btn.disabled=false; return; }
+  if(madera+azul1+azul2+verde===0){ toast('Ingresa al menos una cantidad'); if(btn) btn.disabled=false; return; }
+
+  const {error} = await sb.rpc('registrar_retorno',{
+    p_fecha:fecha, p_camaronera:camaronera, p_guia:guia, p_chofer:chofer, p_placa:placa,
+    p_madera:madera, p_azul1:azul1, p_azul2:azul2, p_verde:verde,
+  });
+  if(error){ toast('Error al registrar: '+errMsg(error)); if(btn) btn.disabled=false; return; }
+
+  closeMo('mo-r');
+  ['r-ma','r-maz','r-mvg'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value='0'; });
+  ['r-gui','r-cho','r-pla'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+
+  await loadAllData();
+  if(ROL==='admin'){ renderR(); renderAdminInv(); }
+  else { renderMR(); renderCamInv(); }
+  toast(`Retorno registrado — ${madera+azul1+azul2+verde} pallets En Tránsito desde ${camaronera}`);
+  if(btn) btn.disabled=false;
+}
+function openVal(id){
+  retV=id; const r=retornos.find(x=>x.id===id); if(!r) return;
+  const nz=PKEYS.filter(k=>r[k]>0);
+  document.getElementById('v-det').innerHTML=`<div class="vblock">
+    <div class="vhd">${sTag(r.camaronera)}<span class="vtot">${totR(r)} pallets</span></div>
+    ${nz.length?`<div class="vgrid">${nz.map(k=>`<div class="vitem"><span class="viL">${PSHORT[k]}</span><span class="viV">${r[k]}</span></div>`).join('')}</div>`:''}
+    <div class="vmeta">Guía: <strong>${r.guia||'—'}</strong> · Chofer: <strong>${r.chofer||'—'}</strong> · Placa: <strong>${r.placa||'—'}</strong></div>
+  </div>`;
+  document.getElementById('v-gui').value=''; document.getElementById('v-obs').value='';
+  openMo('mo-v');
+}
+async function confirmarR(){
+  const id=retV; retV=null;
+  if(!id) return;
+  const guiaBim=document.getElementById('v-gui').value.trim();
+  const obs=document.getElementById('v-obs').value.trim();
+
+  const {error} = await sb.rpc('validar_retorno',{p_id:id, p_guia_biomar:guiaBim, p_obs:obs});
+  if(error){ toast('Error al validar: '+errMsg(error)); return; }
+
+  closeMo('mo-v');
+  await loadAllData();
+  renderR(); renderAdminInv(); setBadges();
+  toast('Recepción confirmada — stock Biomar actualizado');
+}
+</script>
+</body>
+</html>
