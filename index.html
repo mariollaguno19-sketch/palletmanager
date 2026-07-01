@@ -612,7 +612,8 @@ table.dt tbody tr:hover td{background:var(--bg)}
       <div class="qgrid">
         <div class="fg"><label class="fl"><span class="pchip"><span class="pdot pdot-madera"></span>Madera 1,2×1</span></label><input type="number" class="fin" id="r-ma" value="0" min="0" inputmode="numeric"></div>
         <div class="fg"><label class="fl"><span class="pchip"><span class="pdot pdot-azul1"></span>Azul 1,2×1</span></label><input type="number" class="fin" id="r-maz" value="0" min="0" inputmode="numeric"></div>
-        <div class="fg qfull fgl"><label class="fl"><span class="pchip"><span class="pdot pdot-verde"></span>Verde 1,2×1,2</span></label><input type="number" class="fin" id="r-mvg" value="0" min="0" inputmode="numeric"></div>
+        <div class="fg"><label class="fl"><span class="pchip"><span class="pdot pdot-azul2"></span>Azul 1,2×1,2</span></label><input type="number" class="fin" id="r-mvg" value="0" min="0" inputmode="numeric"></div>
+        <div class="fg qfull fgl"><label class="fl"><span class="pchip"><span class="pdot pdot-verde"></span>Verde 1,2×1,2</span></label><input type="number" class="fin" id="r-vde" value="0" min="0" inputmode="numeric"></div>
       </div>
       <div class="mfoot">
         <button class="btn bteal bfull" id="btn-guardar-r" onclick="guardarR()">Enviar Retorno</button>
@@ -1513,7 +1514,7 @@ async function guardarR(){
   const madera=parseInt(document.getElementById('r-ma').value)||0;
   const azul1=parseInt(document.getElementById('r-maz').value)||0;
   const azul2=parseInt(document.getElementById('r-mvg').value)||0;
-  const verde=0;
+  const verde=parseInt(document.getElementById('r-vde').value)||0;
 
   if(!fecha||!camaronera){ toast('Completa fecha y camaronera'); if(btn) btn.disabled=false; return; }
   if([madera,azul1,azul2,verde].some(v=>v<0)){ toast('Las cantidades no pueden ser negativas'); if(btn) btn.disabled=false; return; }
@@ -1527,7 +1528,7 @@ async function guardarR(){
   if(error){ toast('Error al registrar: '+errMsg(error)); if(btn) btn.disabled=false; return; }
 
   closeMo('mo-r');
-  ['r-ma','r-maz','r-mvg'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value='0'; });
+  ['r-ma','r-maz','r-mvg','r-vde'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value='0'; });
   ['r-gui','r-cho','r-pla'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
 
   await loadAllData();
